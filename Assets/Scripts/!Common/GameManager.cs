@@ -18,6 +18,7 @@ public class GameManager : MonoBehaviour
     private bool isLevelKeyPickedUp = false;
 
     public static event Action<int> OnScoreChanged;
+    public static event Action ActivateExitPortal;
 
     private void Update()
     {
@@ -36,6 +37,7 @@ public class GameManager : MonoBehaviour
         PlayerHealthManager.OnPlayerDead += PlayerDeath;
         EnemySpawner.OnEnemyCreation += EnemyCreated;
         PickableObject.OnKeyPickUp += LevelKeyPickedUp;
+        PortalScript.OnLevelEnd += EndViaPortal;
     }
     private void OnDisable()
     {
@@ -43,6 +45,7 @@ public class GameManager : MonoBehaviour
         PlayerHealthManager.OnPlayerDead += PlayerDeath;
         EnemySpawner.OnEnemyCreation -= EnemyCreated;
         PickableObject.OnKeyPickUp -= LevelKeyPickedUp;
+        PortalScript.OnLevelEnd -= EndViaPortal;
     }
 
     private void EnemyKilled(GameObject thisScore)
@@ -64,8 +67,15 @@ public class GameManager : MonoBehaviour
         Debug.Log($"Противников : {_enemies.Count}");
     }
 
-    private void LevelKeyPickedUp(bool condition)
+    private void LevelKeyPickedUp()
     {
-        isLevelKeyPickedUp = condition;
+        isLevelKeyPickedUp = true;
+        ActivateExitPortal?.Invoke();
+    }
+
+    private void EndViaPortal()
+    {
+        SceneManager.LoadScene("GameOver");
+        //TODO:Сделать здесь заггрузку экрана подсчета очков и перехода на следующий уровень
     }
 }

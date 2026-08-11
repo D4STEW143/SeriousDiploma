@@ -29,7 +29,7 @@ public class Shotgun : BaseWeapon
             Vector3 finalDirection = GetRandomSpreadDirection(MuzzleEnd.forward, spreadAngle);
             _rb.linearVelocity = finalDirection * _projectileSpeed;
 
-            _rb.linearVelocity = finalDirection * _projectileSpeed;
+            //_rb.linearVelocity = finalDirection * _projectileSpeed;
 
             Debug.DrawRay(MuzzleEnd.position, finalDirection * 100f, Color.red, 5f);
         }

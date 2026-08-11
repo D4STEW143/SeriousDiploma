@@ -13,6 +13,7 @@ public abstract class BaseWeapon : MonoBehaviour
     [field:SerializeField] public float RateOfFire { get; protected set; }
     [field:SerializeField] public int MagCapacity {  get; protected set; }
     [field:SerializeField] public bool IsAvailable { get; protected set; }
+    [field:SerializeField] public float ReloadTime { get; protected set; }
 
     [SerializeField] protected float _projectileSpeed;
 

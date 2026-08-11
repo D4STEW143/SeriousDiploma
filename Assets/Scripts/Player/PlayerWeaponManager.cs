@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Xml.Serialization;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -16,7 +17,12 @@ public class PlayerWeaponManager : MonoBehaviour
     [SerializeField] private List<GameObject> _playerWeapons;
     private int _currentWeaponIndex = 0;
     private BaseWeapon _currentWeapon;
-    private float _nextFireTime = 0f;
+    private bool _isReadyToShoot = false;
+    private bool _isAutoFiring = false;
+    private Coroutine _shootingCoroutine;
+    private bool _fireDelay;
+    private float _timer = 0f;
+    private bool _isArmed => !_isReloading && HasAmmoInMag(_currentWeapon.WeaponType);
 
     private Dictionary<Weapons, int> _ammoInMag = new Dictionary<Weapons, int> 
     {
@@ -34,14 +40,16 @@ public class PlayerWeaponManager : MonoBehaviour
     };
 
     [SerializeField] protected Animator _animator;
-    private float _currentPlayerSpeed;
+    [SerializeField] protected float _fireAnimationDuration;
 
+    //Animation States
+    private float _currentPlayerSpeed;
+    private bool _isReloading;
+    private bool _isShooting;
 
     //Sound
     protected AudioSource _gunAudioCreator;
 
-    //Reload
-    private bool _isReloading;
 
     //Events
     public static event Action<BaseWeapon> OnWeaponChange;
@@ -50,6 +58,8 @@ public class PlayerWeaponManager : MonoBehaviour
     void Start()
     {
         _gunAudioCreator = GetComponentInChildren<AudioSource>();
+        //_animator = _currentWeapon.GetComponent<Animator>();
+        
         WeaponsPoolInitializer();
         ActivateWeapon(_currentWeaponIndex);
     }
@@ -57,6 +67,10 @@ public class PlayerWeaponManager : MonoBehaviour
     private void Update()
     {
         _animator = _currentWeapon.GetComponentInChildren<Animator>();
+        //if (_isAutoFiring) {
+        //    _timer += Time.deltaTime;
+        //    Debug.Log($"таймер в апдейт: {_timer}");
+        //}
     }
 
     private void OnEnable()
@@ -94,11 +108,13 @@ public class PlayerWeaponManager : MonoBehaviour
     {
         if (!_playerWeapons[_weaponIndex].activeInHierarchy)
         {
+            //_ammoInMag[_currentWeapon.WeaponType] = _currentWeapon.
             _playerWeapons[_currentWeaponIndex].SetActive(false);
             _playerWeapons[_weaponIndex].SetActive(true);
             BaseWeapon _wpn = _playerWeapons[_weaponIndex].GetComponent<BaseWeapon>();
             _currentWeapon = _wpn;
             OnStartBullets(_currentWeapon.WeaponType);
+            _isReadyToShoot = true;
             _currentWeaponIndex = _weaponIndex;
             OnWeaponChange?.Invoke(_currentWeapon);
         }
@@ -136,53 +152,91 @@ public class PlayerWeaponManager : MonoBehaviour
         {
             case InputActionPhase.Started:
                 {
-                    if (_currentWeapon.IsFullAuto)
-                    {
-                        StartCoroutine(ShootAuto());
-                    }
-                    else
-                    {
-                        Shoot();
-                    }
-                    break;
+                    //if (!_currentWeapon.IsFullAuto) 
+                    StartCoroutine(ShootSingle());
+                    if (_currentWeapon.IsFullAuto) _timer = 0f;
                 }
+                break;
             case InputActionPhase.Performed:
-                if (_currentWeapon.IsFullAuto && Time.time >= _nextFireTime)
+                if (_currentWeapon.IsFullAuto)
                 {
-                    Shoot();
-                    _nextFireTime = Time.time + 1f / _currentWeapon.RateOfFire;
+                    _isAutoFiring = true;
+                    _shootingCoroutine = StartCoroutine(ShootAutoLoop());
                 }
                 break;
             case InputActionPhase.Canceled:
                 {
-                    StopAllCoroutines();
+                    _isAutoFiring = false;
+                    _timer = 0f;
+                    if (_shootingCoroutine != null)
+                    {
+                        StopCoroutine(_shootingCoroutine);
+                        _shootingCoroutine = null;
+                    }
                     break;
                 }
+        }
+    }
+
+    private IEnumerator ShootAutoLoop()
+    {
+        // Цикл работает, пока кнопка считается «удерживаемой» через флаг _isAutoFiring
+        while (_isAutoFiring && _isArmed)
+        {
+            // Накопление времени
+            _timer += Time.deltaTime;
+
+            float fireInterval = 60f/ _currentWeapon.RateOfFire; // правильная формула
+
+            if (_timer >= fireInterval)
+            {
+                Debug.Log($"Выстрел! Таймер: {_timer:F3}, интервал: {fireInterval:F3}");
+
+                _animator.SetBool("isShooting", true);
+                Shoot();
+
+                _timer -= fireInterval; // не сбрасываем в 0, чтобы не накапливать «задержку»
+                _animator.SetBool("isShooting", false);
+            }
+
+            yield return null; // ждём следующий кадр
+        }
+    }
+
+    private IEnumerator ShootSingle()
+    {
+        if (_isArmed) 
+        {
+            _animator.SetBool("isShooting", true);
+            if(_isArmed) Shoot();
+            yield return new WaitForSeconds((_currentWeapon.RateOfFire / 60f) / 100f);
+            _animator.SetBool("isShooting", false);
+        }
+    }
+
+    private IEnumerator ShootAuto()
+    {
+        if (_isArmed)
+        {
+            _animator.SetBool("isShooting", true);
+            Shoot();
+            yield return new WaitForSeconds((_currentWeapon.RateOfFire / 60f) / 100f);
+            _animator.SetBool("isShooting", false);
         }
     }
 
     private void Shoot()
     {
-        if (isReadyToShoot)
-        {
-            _currentWeapon.ShootProjectile();
-            _gunAudioCreator.PlayOneShot(_currentWeapon.GunSound);
-            DecriseAmmoInMag(_currentWeapon.WeaponType);
-        }
-        else Debug.Log("Ne gotov strelyat");
+        _currentWeapon.ShootProjectile();
+        _gunAudioCreator.PlayOneShot(_currentWeapon.GunSound);
+        DecriseAmmoInMag(_currentWeapon.WeaponType);
     }
 
-    private IEnumerator ShootAuto()
+    private IEnumerator ShotTimer()
     {
-        while (true)
-        {
-            if (Time.time >= _nextFireTime)
-            {
-                Shoot();
-                _nextFireTime = Time.time + 1f / _currentWeapon.RateOfFire;
-            }
-            yield return null;
-        }
+        _isReadyToShoot = false;
+        yield return new WaitForSeconds(_currentWeapon.RateOfFire/60/100);
+        _isReadyToShoot = true;
     }
 
     //Уменьшает на 1 количество патронов в магазине в зависимости от типа текущего оружия.
@@ -198,7 +252,7 @@ public class PlayerWeaponManager : MonoBehaviour
     private void CurrentPlayerSpeed(float speed)
     {
         _currentPlayerSpeed = speed;
-        //_animator.SetFloat("Speed", _currentPlayerSpeed);
+        _animator.SetFloat("Speed", _currentPlayerSpeed);
     }
 
 
@@ -220,18 +274,22 @@ public class PlayerWeaponManager : MonoBehaviour
     {
         if (context.performed)
         {
-            Reload(_currentWeapon.WeaponType);
+            StartCoroutine(Reload(_currentWeapon.WeaponType));
+            //Reload(_currentWeapon.WeaponType);
         }
     }
 
-    private void Reload(Weapons weaponType)
+    private IEnumerator Reload(Weapons weaponType)
     {
         if (HasAmmo(weaponType))
         {
             _isReloading = true;
+            _animator.SetBool("isReloading", _isReloading);
+            yield return new WaitForSeconds(_currentWeapon.ReloadTime);
             _ammoInMag[_currentWeapon.WeaponType] = SetBulletsInMag();
             Debug.Log("Перезарядка");
             _isReloading = false;
+            _animator.SetBool("isReloading", _isReloading);
         }
         else Debug.Log("Перезарядка невозможна. Закончились патроны.");
     }
@@ -303,7 +361,7 @@ public class PlayerWeaponManager : MonoBehaviour
         
     }
 
-    private bool isReadyToShoot => !_isReloading && HasAmmoInMag(_currentWeapon.WeaponType);
+    
 
     public int BulletsInMagLeft(Weapons weaponType)
     {

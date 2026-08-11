@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using UnityEngine;
 
 public class PickableObject : MonoBehaviour
@@ -7,19 +8,24 @@ public class PickableObject : MonoBehaviour
     [SerializeField] private int _howMuchToAdd;
     [SerializeField] private GameObject _visual;
     [SerializeField] private GameObject _lightObject;
+    [SerializeField] private AudioClip _puckUpSound;
+    private AudioSource _puckUpAudioSource;
     private Light _light;
+    private Collider _collider;
 
-    public static event Action<bool> OnKeyPickUp;
     public static event Action<int> OnPickUpHealth; 
     public static event Action<int> OnPickUpArmor; 
     public static event Action<int, Weapons> OnPickUpPistolAmmo; 
     public static event Action<int, Weapons> OnPickUpSMGAmmo; 
     public static event Action<int, Weapons> OnPickUpRifleAmmo; 
-    public static event Action<int, Weapons> OnPickUpShotgunAmmo; 
+    public static event Action<int, Weapons> OnPickUpShotgunAmmo;
+    public static event Action OnKeyPickUp;
     
     private void Start()
     {
         _light = _lightObject.GetComponent<Light>();
+        _puckUpAudioSource = GetComponent<AudioSource>();
+        _collider = GetComponent<Collider>(); 
     }
 
     private void Update()
@@ -28,7 +34,18 @@ public class PickableObject : MonoBehaviour
         _visual.transform.Translate(0f, Mathf.PingPong(Time.time, 3f), 0f);
         _visual.transform.Translate(0f, -Mathf.PingPong(Time.time, 3f), 0f);
         _light.intensity = Mathf.PingPong(Time.time, 3);
-    } 
+    }
+
+    private IEnumerator DisablePickableObject()
+    {
+        _collider.enabled = false;
+        _lightObject.SetActive(false);
+        _visual.SetActive(false);
+        _puckUpAudioSource.PlayOneShot(_puckUpSound, 1f);
+        Debug.Log("Звук поднятия пикапа проигрался");
+        yield return new WaitForSeconds(1f);
+        this.gameObject.SetActive(false);
+    }
 
     private void OnTriggerEnter(Collider other)
     {
@@ -68,7 +85,7 @@ public class PickableObject : MonoBehaviour
                     }
                 case Pickable.LevelKey:
                     {
-                        OnKeyPickUp?.Invoke(true);
+                        OnKeyPickUp?.Invoke();
                         break;
                     }
                 default:
@@ -79,7 +96,7 @@ public class PickableObject : MonoBehaviour
                         //TODO:Defalult сделать
                     }
             Debug.Log($"{_type} поднят");
-            Destroy(gameObject);
+            StartCoroutine(DisablePickableObject());
         }
     }
 }

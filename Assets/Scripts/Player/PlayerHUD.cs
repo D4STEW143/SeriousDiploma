@@ -17,7 +17,9 @@ public class PlayerHUD : MonoBehaviour
     [SerializeField] private TextMeshProUGUI _playerArmor;
     [SerializeField] private TextMeshProUGUI _weaponAmmo;
     [SerializeField] private TextMeshProUGUI _scoreText;
+    [SerializeField] private TextMeshProUGUI _timer;
     [SerializeField] private GameObject _crosshair;
+    private float _time = 0f;
     
     private void Start()
     {
@@ -26,10 +28,12 @@ public class PlayerHUD : MonoBehaviour
         _playerHealthManager = _player.GetComponent<PlayerHealthManager>();
         if (_playerWeaponManager == null) Debug.LogError("Health Manager не найден на объекте!");
         _crosshair.SetActive(true);
+
     }
 
     private void Update()
     {
+        TimerTick();
         UpdateHUD();   
     }
 
@@ -65,7 +69,38 @@ public class PlayerHUD : MonoBehaviour
         {
             _weaponAmmo.text = $"{_playerWeaponManager.BulletsInMagLeft(_weapon.WeaponType)}/{_playerWeaponManager.CurrentAmmoAmount(_weapon.WeaponType)}";
         }
-         if(_scoreText!=null)_scoreText.text = _score.ToString();
+        if(_scoreText!=null)_scoreText.text = _score.ToString();
+        _timer.text = TimeDisplayment(_time);
+    }
+
+    private void TimerTick()
+    {
+        _time += Time.deltaTime;
+    }
+
+    private string TimeDisplayment(float _time)
+    {
+        string toReturn;
+        double milisec;
+        int sec = 0;
+        int min = 0;
+        int hour = 0;
+        milisec = (double)_time - Math.Truncate(_time);
+        if(Math.Truncate(_time) < 60d) sec = (int)Math.Truncate(_time);
+        else
+        {
+            min = (int)Math.Truncate(_time) / 60;
+            sec = (int)Math.Truncate(_time) - (min * 60);
+        }
+        if(min > 60)
+        {
+            hour = min / 60;
+            min = min - (min * 60);
+        }
+
+        toReturn = $"{hour}:{min}:{sec}.{(int)(milisec * 10)}";
+
+        return toReturn;
     }
 
 }
