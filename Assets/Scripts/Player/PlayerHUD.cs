@@ -19,7 +19,7 @@ public class PlayerHUD : MonoBehaviour
     [SerializeField] private TextMeshProUGUI _scoreText;
     [SerializeField] private TextMeshProUGUI _timer;
     [SerializeField] private GameObject _crosshair;
-    private float _time = 0f;
+    public float Timer { get; private set; } = 0f;
     
     private void Start()
     {
@@ -70,12 +70,12 @@ public class PlayerHUD : MonoBehaviour
             _weaponAmmo.text = $"{_playerWeaponManager.BulletsInMagLeft(_weapon.WeaponType)}/{_playerWeaponManager.CurrentAmmoAmount(_weapon.WeaponType)}";
         }
         if(_scoreText!=null)_scoreText.text = _score.ToString();
-        _timer.text = TimeDisplayment(_time);
+        _timer.text = TimeDisplayment(Timer);
     }
 
     private void TimerTick()
     {
-        _time += Time.deltaTime;
+        Timer += Time.deltaTime;
     }
 
     private string TimeDisplayment(float _time)

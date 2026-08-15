@@ -12,6 +12,7 @@ public class GameManager : MonoBehaviour
     private int _gameScore;
 
     [SerializeField] private PlayerHUD _playerHUD;
+    private ScoreCounterScreen _scoreCounter;
 
     private List<GameObject> _enemies = new List<GameObject>();
 
@@ -19,6 +20,12 @@ public class GameManager : MonoBehaviour
 
     public static event Action<int> OnScoreChanged;
     public static event Action ActivateExitPortal;
+
+    private void Start()
+    {
+        Time.timeScale = 1.0f;
+        _scoreCounter = GetComponent<ScoreCounterScreen>();
+    }
 
     private void Update()
     {
@@ -38,6 +45,7 @@ public class GameManager : MonoBehaviour
         EnemySpawner.OnEnemyCreation += EnemyCreated;
         PickableObject.OnKeyPickUp += LevelKeyPickedUp;
         PortalScript.OnLevelEnd += EndViaPortal;
+        ScoreCounterScreen.ContinueButtonClick += LoadNextLevel;
     }
     private void OnDisable()
     {
@@ -46,6 +54,7 @@ public class GameManager : MonoBehaviour
         EnemySpawner.OnEnemyCreation -= EnemyCreated;
         PickableObject.OnKeyPickUp -= LevelKeyPickedUp;
         PortalScript.OnLevelEnd -= EndViaPortal;
+        ScoreCounterScreen.ContinueButtonClick -= LoadNextLevel;
     }
 
     private void EnemyKilled(GameObject thisScore)
@@ -75,7 +84,14 @@ public class GameManager : MonoBehaviour
 
     private void EndViaPortal()
     {
-        SceneManager.LoadScene("GameOver");
+        _scoreCounter.ManageScore(_gameScore, _playerHUD.Timer);
+        //SceneManager.LoadScene("GameOver");
         //TODO:Сделать здесь заггрузку экрана подсчета очков и перехода на следующий уровень
+    }
+
+    private void LoadNextLevel()
+    {
+        if(Time.timeScale == 0) Time.timeScale = 1;
+        SceneManager.LoadScene(0);
     }
 }

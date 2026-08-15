@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 8287694361286890763}
   - component: {fileID: 739706236062296890}
   - component: {fileID: 7186680527469288877}
+  - component: {fileID: 3653755119443641429}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -46,6 +47,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameManager
   _playerHUD: {fileID: 0}
+  _scoreCounter: {fileID: 0}
 --- !u!114 &7186680527469288877
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -60,3 +62,26 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PauseManager
   _pauseMenu: {fileID: 0}
   _player: {fileID: 0}
+  _elements:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+--- !u!114 &3653755119443641429
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8186994297827887484}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d88e408d4a1851e4f9e89238ed068ef0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ScoreCounterScreen
+  _canvas: {fileID: 0}
+  _scoreView: {fileID: 0}
+  _rankView: {fileID: 0}
+  _btnContinue: {fileID: 0}

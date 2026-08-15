@@ -56,6 +56,11 @@ public class EnemyController : MonoBehaviour
         if(this.isActiveAndEnabled)Debug.Log($"Enemy speed " + speed);
     }
 
+    private void Move()
+    {
+
+    }
+
     private void PlayerCheck()  //функция проверяет есть ли игрок в зоне удара и если да запускает анимацию
     {
         if (_enemy.CanHit)
