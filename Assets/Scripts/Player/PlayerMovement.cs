@@ -41,7 +41,6 @@ public class PlayerMovement : MonoBehaviour
     void Update()
     {
         HandleMouse();
-        WeaponSway();
         HandleMovement();
 
         UpdatePlayerSpeedEvent();
@@ -66,23 +65,13 @@ public class PlayerMovement : MonoBehaviour
 
     private void UpdatePlayerSpeedEvent()
     {
-        // Берём горизонтальную скорость (без учёта вертикальной составляющей прыжка/гравитации)
         Vector3 horizontalVelocity = _characterController.velocity;
-        horizontalVelocity.y = 0f; // Игнорируем вертикальную составляющую
+        horizontalVelocity.y = 0f; 
 
         float currentSpeed = horizontalVelocity.magnitude;
-
-        // Нормализуем скорость относительно максимальной (_moveSpeed)
-        // Получаем значение от 0 до 1
         float normalizedSpeed = currentSpeed / _moveSpeed;
-
-        // Гарантируем, что значение будет в диапазоне [0, 1]
         normalizedSpeed = Mathf.Clamp01(normalizedSpeed);
-
-        // Сохраняем для аниматора (если нужно)
         _speedForAnimator = normalizedSpeed;
-
-        // Вызываем событие с текущей нормализованной скоростью
         PlayerSpeed?.Invoke(normalizedSpeed);
     }
 

@@ -6,19 +6,8 @@ public class Shotgun : BaseWeapon
     [SerializeField] private float spreadAngle;
     public override void ShootProjectile()
     {
-        //for(int i = 0; i < _projectilesInShell; i++)
-        //{
-        //    Rigidbody _rb = Instantiate(_bulletPrefab, MuzzleEnd.transform.position, Quaternion.identity);
-        //    Bullet bullet = _rb.GetComponent<Bullet>();
-        //    bullet.damage = this.Damage / _projectilesInShell;
-        //    _rb.linearVelocity = (MuzzleEnd.forward + new Vector3(Random.Range(0.001f, 0.002f), Random.Range(0.001f, 0.002f), Random.Range(0.001f, 0.002f))) * _projectileSpeed;
-
-        //    Debug.DrawRay(MuzzleEnd.position, MuzzleEnd.forward * 100f, Color.red, 5f);
-        //}
-
         for (int i = 0; i < _projectilesInShell; i++) { 
-
-            Rigidbody _rb = Instantiate(_bulletPrefab, MuzzleEnd.transform.position, Quaternion.identity);
+            Rigidbody _rb = Instantiate(_bulletPrefab, CreateStartSpread(MuzzleEnd.transform.position), Quaternion.identity);
             Bullet bullet = _rb.GetComponent<Bullet>();
             bullet.damage = this.Damage / _projectilesInShell;
 
@@ -29,7 +18,6 @@ public class Shotgun : BaseWeapon
             Vector3 finalDirection = GetRandomSpreadDirection(MuzzleEnd.forward, spreadAngle);
             _rb.linearVelocity = finalDirection * _projectileSpeed;
 
-            //_rb.linearVelocity = finalDirection * _projectileSpeed;
 
             Debug.DrawRay(MuzzleEnd.position, finalDirection * 100f, Color.red, 5f);
         }
@@ -40,6 +28,11 @@ public class Shotgun : BaseWeapon
         Vector3 randomDirection = Random.insideUnitSphere * maxAngle;
         Quaternion spread = Quaternion.Euler(randomDirection);
         return spread * baseDirection;
+    }
+
+    Vector3 CreateStartSpread(Vector3 startPosition)//Добавляет небольшой разброс при спавне проджектьайлов, чтобы пофиксить баг с тупой стрельбой дробовика
+    {
+        return new Vector3(startPosition.x + Random.Range(0, 0.1f), startPosition.y + Random.Range(0, 0.1f), startPosition.z + Random.Range(0, 0.1f));
     }
 
 

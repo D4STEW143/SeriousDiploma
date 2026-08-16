@@ -3,8 +3,7 @@ public enum Weapons
     Pistol,
     SMG,
     Rifle,
-    Shotgun,
-    Rocketlauncher
+    Shotgun
 }
 
 public enum Pickable
@@ -15,6 +14,9 @@ public enum Pickable
     SMGAmmo,
     RifleAmmo,
     ShotgunAmmo,
-    RocketLauncherAmmo,
-    LevelKey
+    LevelKey,
+    PistolWeapon,
+    SMGWeapon,
+    RifleWeapon,
+    ShotgunWeapon
 }

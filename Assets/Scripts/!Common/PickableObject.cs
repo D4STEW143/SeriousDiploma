@@ -20,6 +20,10 @@ public class PickableObject : MonoBehaviour
     public static event Action<int, Weapons> OnPickUpRifleAmmo; 
     public static event Action<int, Weapons> OnPickUpShotgunAmmo;
     public static event Action OnKeyPickUp;
+    public static event Action<Pickable> OnPistolWeaponPickUp;
+    public static event Action<Pickable> OnSMGWeaponPickUp;
+    public static event Action<Pickable> OnRifleWeaponPickUp;
+    public static event Action<Pickable> OnShotgunWeaponPickUp;
     
     private void Start()
     {
@@ -86,6 +90,26 @@ public class PickableObject : MonoBehaviour
                 case Pickable.LevelKey:
                     {
                         OnKeyPickUp?.Invoke();
+                        break;
+                    }
+                case Pickable.PistolWeapon:
+                    {
+                        OnPistolWeaponPickUp?.Invoke(Pickable.PistolWeapon);
+                        break;
+                    }
+                case Pickable.SMGWeapon:
+                    {
+                        OnSMGWeaponPickUp?.Invoke(Pickable.SMGWeapon);
+                        break;
+                    }
+                case Pickable.RifleWeapon:
+                    {
+                        OnRifleWeaponPickUp?.Invoke(Pickable.RifleWeapon);
+                        break;
+                    }
+                case Pickable.ShotgunWeapon:
+                    {
+                        OnShotgunWeaponPickUp?.Invoke(Pickable.ShotgunWeapon);
                         break;
                     }
                 default:

@@ -26,6 +26,8 @@ public abstract class BaseWeapon : MonoBehaviour
     [field:SerializeField] public AudioClip GunSound { get; protected set; }
 
 
+    [field:SerializeField] public bool IsActive { get; set; }
+
 
     public virtual void ShootProjectile()
     {
@@ -37,7 +39,7 @@ public abstract class BaseWeapon : MonoBehaviour
         Debug.DrawRay(MuzzleEnd.position, MuzzleEnd.forward * 100f, Color.red, 5f);
     }
 
-    
+
 
 
 }

@@ -84,10 +84,8 @@ public class EnemySpawner : MonoBehaviour
         {
             GameObject enemy = EnemiesPool[i];
 
-            // Сначала проверяем на null (покрывает и уничтоженные объекты)
             if (enemy == null)
             {
-                // Удаляем из пула, чтобы не проверять дальше
                 EnemiesPool.RemoveAt(i);
                 i--;
                 continue;
@@ -108,24 +106,6 @@ public class EnemySpawner : MonoBehaviour
         }
     }
 
-    //private void Spawn()
-    //{
-    //    foreach(GameObject enemy in EnemiesPool)
-    //    {
-    //        if (!enemy.activeInHierarchy && !enemy.IsUnityNull())
-    //        {
-    //            Vector3 spawnPosition = GetSpawnPosition();
-    //            Debug.Log($"Spawn position: {spawnPosition}");
-    //            if (GroundCheck(spawnPosition, out Vector3 finalPosition))
-    //            {
-    //                enemy.transform.position = finalPosition;
-    //                enemy.SetActive(true);
-    //                break;
-    //            }
-    //        }
-    //    }
-    //}
-
     private bool GroundCheck(Vector3 spawnPosition, out Vector3 groundPosition)
     {
         //TODO: Make this method clear.
@@ -134,7 +114,6 @@ public class EnemySpawner : MonoBehaviour
         bool rhit = Physics.Raycast(spawnPosition + Vector3.up * (_groundDelta - 1f), Vector3.down, out hit, _groundDelta, groundLayer);
         Debug.Log($"Hit point: {hit.point}");
         DebugRaycast(spawnPosition, _groundDelta, groundLayer);
-        //if (Physics.Raycast(spawnPosition + Vector3.up * 10f, Vector3.down, out hit, _groundDelta, groundLayer))
         if(rhit)
         {
             groundPosition = hit.point + Vector3.up * 0.1f;
@@ -153,7 +132,6 @@ public class EnemySpawner : MonoBehaviour
     private Vector3 GetSpawnPosition()
     {
         return new Vector3(UnityEngine.Random.Range(transform.position.x + minSpawnCoord.x, transform.position.x + maxSpawnCoord.x), spawnHeight, UnityEngine.Random.Range(transform.position.z + minSpawnCoord.y, transform.position.z + maxSpawnCoord.y));
-        //return new Vector3(UnityEngine.Random.Range(_player.position.x + minSpawnCoord.x, _player.position.x + maxSpawnCoord.x), 1f, UnityEngine.Random.Range(_player.position.z + minSpawnCoord.y, _player.position.z + maxSpawnCoord.y));
     }
 
     private void OnDrawGizmos()
@@ -161,43 +139,23 @@ public class EnemySpawner : MonoBehaviour
         Vector3 minXminY = new Vector3(transform.position.x + minSpawnCoord.x, spawnHeight, transform.position.z + minSpawnCoord.y);
         Gizmos.DrawSphere(minXminY, 0.5f);
         Vector3 minXmaxY = new Vector3(transform.position.x + minSpawnCoord.x, spawnHeight, transform.position.z + maxSpawnCoord.y);
-        //Gizmos.DrawSphere(new Vector3(transform.position.x + minSpawnCoord.x, 1f, transform.position.z + minSpawnCoord.y), 1f);
         Gizmos.DrawSphere(minXmaxY, 0.5f);
-        //Gizmos.DrawSphere(new Vector3(transform.position.x + minSpawnCoord.x, 1f, transform.position.z + maxSpawnCoord.y), 1f);
         Vector3 maxXmaxY = new Vector3(transform.position.x + maxSpawnCoord.x, spawnHeight, transform.position.z + maxSpawnCoord.y);
         Gizmos.DrawSphere(maxXmaxY, 0.5f);
-        //Gizmos.DrawSphere(new Vector3(transform.position.x + maxSpawnCoord.x, 1f, transform.position.z + maxSpawnCoord.y), 1f);
         Vector3 maxXminY = new Vector3(transform.position.x + maxSpawnCoord.x, spawnHeight, transform.position.z + minSpawnCoord.y);
         Gizmos.DrawSphere(maxXminY, 0.5f);
-        //Gizmos.DrawSphere(new Vector3(transform.position.x + maxSpawnCoord.x, 1f, transform.position.z + minSpawnCoord.y), 1f);
         Gizmos.DrawLine(minXminY, minXmaxY); //левая вертикаль
         Gizmos.DrawLine(minXmaxY, maxXmaxY); //левая вертикаль
         Gizmos.DrawLine(maxXmaxY, maxXminY); //левая вертикаль
         Gizmos.DrawLine(maxXminY, minXminY); //левая вертикаль
     }
 
-    //private bool CheckPrefabsActive()
-    //{
-    //    foreach(GameObject enemy in EnemiesPool)
-    //    {
-    //        if (enemy.activeInHierarchy) check = true;
-    //        if (!enemy.activeInHierarchy)
-    //        {
-    //            check = false;
-    //            break;
-    //        }
-    //    }
-    //    return check;
-    //}
-
     private bool CheckPrefabsActive()
     {
         foreach (var enemy in EnemiesPool)
         {
-            // Сначала проверяем на null — это ловит и уничтоженные объекты
             if (enemy == null)
             {
-                // Если в пуле есть уничтоженный объект, считаем проверку проваленной
                 return false;
             }
 
@@ -207,7 +165,6 @@ public class EnemySpawner : MonoBehaviour
             }
         }
 
-        // Если дошли сюда — все объекты валидны и активны
         return true;
     }
 

@@ -10,7 +10,6 @@ public class Bullet : MonoBehaviour
 
     public void Update()
     {
-        //Debug.Log("Letim");
         Destroy(this.gameObject, _bulletDestroyDelay);
     }
 

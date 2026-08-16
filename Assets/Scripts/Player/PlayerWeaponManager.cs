@@ -6,7 +6,6 @@ using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-//TODO:Перезарядка через корутину
 //TODO:Сделать коментарии к методам на английском
 
 public class PlayerWeaponManager : MonoBehaviour
@@ -20,23 +19,25 @@ public class PlayerWeaponManager : MonoBehaviour
     private bool _isReadyToShoot = false;
     private bool _isAutoFiring = false;
     private Coroutine _shootingCoroutine;
+    private Coroutine _reloadingCoroutine;
     private bool _fireDelay;
     private float _timer = 0f;
+    private Vector3 _zeroPosition = new Vector3(0.258f, -0.1900001f, 0.704f);
     private bool _isArmed => !_isReloading && HasAmmoInMag(_currentWeapon.WeaponType);
 
     private Dictionary<Weapons, int> _ammoInMag = new Dictionary<Weapons, int> 
     {
-        {Weapons.Pistol, 0 }, {Weapons.SMG, 0 }, {Weapons.Rifle, 0 }, {Weapons.Shotgun, 0 }, {Weapons.Rocketlauncher, 0 }
+        {Weapons.Pistol, 0 }, {Weapons.SMG, 0 }, {Weapons.Rifle, 0 }, {Weapons.Shotgun, 0 }
     };
 
     private Dictionary<Weapons, int> _currentAmmo = new Dictionary<Weapons, int>
     {
-        {Weapons.Pistol, 100 }, {Weapons.SMG, 250 }, {Weapons.Rifle, 120 }, {Weapons.Shotgun, 100 }, {Weapons.Rocketlauncher, 0}
+        {Weapons.Pistol, 100 }, {Weapons.SMG, 250 }, {Weapons.Rifle, 120 }, {Weapons.Shotgun, 100 }
     };
 
     private Dictionary<Weapons, int> _maxAmmo = new Dictionary<Weapons, int>
     {
-        {Weapons.Pistol, 149 }, {Weapons.SMG, 1200}, {Weapons.Rifle, 450}, {Weapons.Shotgun, 200}, {Weapons.Rocketlauncher, 70}
+        {Weapons.Pistol, 149 }, {Weapons.SMG, 1200}, {Weapons.Rifle, 450}, {Weapons.Shotgun, 200}
     };
 
     [SerializeField] protected Animator _animator;
@@ -58,7 +59,6 @@ public class PlayerWeaponManager : MonoBehaviour
     void Start()
     {
         _gunAudioCreator = GetComponentInChildren<AudioSource>();
-        //_animator = _currentWeapon.GetComponent<Animator>();
         
         WeaponsPoolInitializer();
         ActivateWeapon(_currentWeaponIndex);
@@ -66,11 +66,7 @@ public class PlayerWeaponManager : MonoBehaviour
 
     private void Update()
     {
-        _animator = _currentWeapon.GetComponentInChildren<Animator>();
-        //if (_isAutoFiring) {
-        //    _timer += Time.deltaTime;
-        //    Debug.Log($"таймер в апдейт: {_timer}");
-        //}
+        if(_currentWeapon.IsActive) _animator = _currentWeapon.GetComponentInChildren<Animator>();
     }
 
     private void OnEnable()
@@ -80,6 +76,10 @@ public class PlayerWeaponManager : MonoBehaviour
         PickableObject.OnPickUpRifleAmmo += AmmoPickUp;
         PickableObject.OnPickUpShotgunAmmo += AmmoPickUp;
         PlayerMovement.PlayerSpeed += CurrentPlayerSpeed;
+        PickableObject.OnPistolWeaponPickUp += WeaponPickUp;
+        PickableObject.OnSMGWeaponPickUp += WeaponPickUp;
+        PickableObject.OnRifleWeaponPickUp += WeaponPickUp;
+        PickableObject.OnShotgunWeaponPickUp += WeaponPickUp;
     }
 
     private void OnDisable()
@@ -89,38 +89,57 @@ public class PlayerWeaponManager : MonoBehaviour
         PickableObject.OnPickUpRifleAmmo -= AmmoPickUp;
         PickableObject.OnPickUpShotgunAmmo -= AmmoPickUp;
         PlayerMovement.PlayerSpeed -= CurrentPlayerSpeed;
+        PickableObject.OnPistolWeaponPickUp -= WeaponPickUp;
+        PickableObject.OnSMGWeaponPickUp -= WeaponPickUp;
+        PickableObject.OnRifleWeaponPickUp -= WeaponPickUp;
+        PickableObject.OnShotgunWeaponPickUp -= WeaponPickUp;
     }
 
-    //Инициализирует и деактивирует список оружия игрока
+    //Инициализирует и деактивирует список оружия игрока, кроме стартового пистолета
     private void WeaponsPoolInitializer() 
     {
         foreach (GameObject weapon in _playerWeaponsPool)
         {
             GameObject _weapon = Instantiate(weapon, _weaponHolder.transform);
             _playerWeapons.Add(_weapon);
+            _weapon.GetComponent<BaseWeapon>().IsActive = false;
             _weapon.gameObject.SetActive(false);
         }
+        _playerWeapons[0].GetComponent<BaseWeapon>().IsActive = true;
+        _weaponHolder.transform.localPosition = _zeroPosition; 
     }
 
     //Устанавливает активным из списка оружия то оружие, индекс которого пришел методу в качестве параметра.
     //А так же устанавливает активированое оружие в качестве текущего для последущих взаимодействий.
     private void ActivateWeapon(int _weaponIndex)
     {
-        if (!_playerWeapons[_weaponIndex].activeInHierarchy)
+        if (!_playerWeapons[_weaponIndex].activeInHierarchy && _playerWeapons[_weaponIndex].GetComponent<BaseWeapon>().IsActive)
         {
-            //_ammoInMag[_currentWeapon.WeaponType] = _currentWeapon.
+            DeactivateWeapon();
             _playerWeapons[_currentWeaponIndex].SetActive(false);
+            //_playerWeapons[_currentWeaponIndex].transform.localPosition = new Vector3(0f,0f,0f);
             _playerWeapons[_weaponIndex].SetActive(true);
+            //_playerWeapons[_weaponIndex].transform.localPosition = new Vector3(0f, 0f, 0f);
             BaseWeapon _wpn = _playerWeapons[_weaponIndex].GetComponent<BaseWeapon>();
             _currentWeapon = _wpn;
             OnStartBullets(_currentWeapon.WeaponType);
             _isReadyToShoot = true;
             _currentWeaponIndex = _weaponIndex;
+
             OnWeaponChange?.Invoke(_currentWeapon);
         }
     }
 
-//TODO:Дописать метод который будет добавлять патроны в магазин на старте сцены. Сделать флаги активации оружия, для проверки первая активация или нет.
+    private void DeactivateWeapon()
+    {
+        if(_reloadingCoroutine != null) StopCoroutine(_reloadingCoroutine);
+        if (_shootingCoroutine != null) StopCoroutine(_shootingCoroutine);
+        _playerWeapons[_currentWeaponIndex].transform.localPosition = new Vector3(0f, 0f, 0f);
+        _playerWeapons[_currentWeaponIndex].transform.localRotation = new Quaternion(0f, 0f, 0f, 0f);
+        _weaponHolder.transform.localPosition = _zeroPosition; 
+    }
+
+    //TODO:Дописать метод который будет добавлять патроны в магазин на старте сцены. Сделать флаги активации оружия, для проверки первая активация или нет.
     private void OnStartBullets(Weapons weaponType)
     {
         _ammoInMag[weaponType] = SetBulletsInMag();
@@ -144,6 +163,41 @@ public class PlayerWeaponManager : MonoBehaviour
             }
         }
         else Debug.Log($"Unable to add ammo to {weaponType}.");
+    }
+
+    private void WeaponPickUp(Pickable weaponType)
+    {
+        switch (weaponType)
+        {
+            case Pickable.PistolWeapon:
+                {
+                    if (!_playerWeapons[0].GetComponent<BaseWeapon>().IsActive) _playerWeapons[0].GetComponent<BaseWeapon>().IsActive = true;
+                    DeactivateWeapon();
+                    ActivateWeapon(0);
+                    break;
+                }
+            case Pickable.SMGWeapon:
+                {
+                    if (!_playerWeapons[1].GetComponent<BaseWeapon>().IsActive) _playerWeapons[1].GetComponent<BaseWeapon>().IsActive = true;
+                    DeactivateWeapon();
+                    ActivateWeapon(1);
+                    break;
+                }
+            case Pickable.RifleWeapon:
+                {
+                    if (!_playerWeapons[2].GetComponent<BaseWeapon>().IsActive) _playerWeapons[2].GetComponent<BaseWeapon>().IsActive = true;
+                    DeactivateWeapon();
+                    ActivateWeapon(2);
+                    break;
+                }
+            case Pickable.ShotgunWeapon:
+                {
+                    if (!_playerWeapons[3].GetComponent<BaseWeapon>().IsActive) _playerWeapons[3].GetComponent<BaseWeapon>().IsActive = true;
+                    DeactivateWeapon();
+                    ActivateWeapon(3);
+                    break;
+                }
+        }
     }
 
     public void OnShoot(InputAction.CallbackContext context)
@@ -180,13 +234,11 @@ public class PlayerWeaponManager : MonoBehaviour
 
     private IEnumerator ShootAutoLoop()
     {
-        // Цикл работает, пока кнопка считается «удерживаемой» через флаг _isAutoFiring
         while (_isAutoFiring && _isArmed)
         {
-            // Накопление времени
             _timer += Time.deltaTime;
 
-            float fireInterval = 60f/ _currentWeapon.RateOfFire; // правильная формула
+            float fireInterval = 60f/ _currentWeapon.RateOfFire;
 
             if (_timer >= fireInterval)
             {
@@ -195,11 +247,11 @@ public class PlayerWeaponManager : MonoBehaviour
                 _animator.SetBool("isShooting", true);
                 Shoot();
 
-                _timer -= fireInterval; // не сбрасываем в 0, чтобы не накапливать «задержку»
+                _timer -= fireInterval; 
                 _animator.SetBool("isShooting", false);
             }
 
-            yield return null; // ждём следующий кадр
+            yield return null; 
         }
     }
 
@@ -214,7 +266,7 @@ public class PlayerWeaponManager : MonoBehaviour
         }
     }
 
-    private IEnumerator ShootAuto()
+    private IEnumerator ShootAuto()//Depricatted
     {
         if (_isArmed)
         {
@@ -232,7 +284,8 @@ public class PlayerWeaponManager : MonoBehaviour
         DecriseAmmoInMag(_currentWeapon.WeaponType);
     }
 
-    private IEnumerator ShotTimer()
+    
+    private IEnumerator ShotTimer() //Depricated
     {
         _isReadyToShoot = false;
         yield return new WaitForSeconds(_currentWeapon.RateOfFire/60/100);
@@ -274,8 +327,7 @@ public class PlayerWeaponManager : MonoBehaviour
     {
         if (context.performed)
         {
-            StartCoroutine(Reload(_currentWeapon.WeaponType));
-            //Reload(_currentWeapon.WeaponType);
+            _reloadingCoroutine = StartCoroutine(Reload(_currentWeapon.WeaponType));
         }
     }
 
@@ -290,6 +342,7 @@ public class PlayerWeaponManager : MonoBehaviour
             Debug.Log("Перезарядка");
             _isReloading = false;
             _animator.SetBool("isReloading", _isReloading);
+            _reloadingCoroutine = null;
         }
         else Debug.Log("Перезарядка невозможна. Закончились патроны.");
     }

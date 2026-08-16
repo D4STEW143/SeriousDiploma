@@ -7,6 +7,7 @@ public class Aimer : MonoBehaviour
     [SerializeField]private LayerMask _layerMask = Physics.DefaultRaycastLayers;
     [SerializeField]private bool _drawGizmos;
     private Vector3 _targetPoint;
+    private BaseWeapon _baseWeapon;
 
     private void OnValidate()
     {
@@ -27,14 +28,15 @@ public class Aimer : MonoBehaviour
     private void Update()
     {
         Ray ray = new Ray(_camTransform.position, _camTransform.forward);
-        _targetPoint = ray.GetPoint(50f);
-        if(Physics.Raycast(ray, out RaycastHit hit, 1000f, _layerMask, QueryTriggerInteraction.Ignore))
+        //_targetPoint = ray.GetPoint(50f);
+        if(Physics.Raycast(ray, out RaycastHit hit, 10f, _layerMask, QueryTriggerInteraction.Ignore))
         {
             if(hit.distance >= 0.01f)
             {
                 _targetPoint = hit.point;
             }
         }
-        GetComponentInChildren<BaseWeapon>().MuzzleEnd.LookAt(_targetPoint);
+        if(GetComponentInChildren<BaseWeapon>().IsActive) GetComponentInChildren<BaseWeapon>().MuzzleEnd.LookAt(_targetPoint);
+        
     }
 }

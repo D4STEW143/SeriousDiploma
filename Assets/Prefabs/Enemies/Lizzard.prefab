@@ -681,7 +681,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3327395289185326635}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.000000017171262, y: 0.0000000013969839, z: -0.000000001396984, w: 1}
+  m_LocalRotation: {x: 0.000000017171262, y: 0.0000000013969839, z: -0.000000001396984,
+    w: 1}
   m_LocalPosition: {x: 6.519258e-11, y: 0.0034439077, z: 4.9360094e-10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -1063,10 +1064,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3144a407ddcea504c80a6804a3980e3e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::enemy_Lizzard
-  _health: 30
-  <Speed>k__BackingField: 5
-  <Damage>k__BackingField: 7
-  <Score>k__BackingField: 10
+  _health: 15
+  <Speed>k__BackingField: 7
+  <Damage>k__BackingField: 15
+  <Score>k__BackingField: 25
   <CanShoot>k__BackingField: 0
   <CanHit>k__BackingField: 1
   <ProjectileSpawnPoint>k__BackingField: {fileID: 0}

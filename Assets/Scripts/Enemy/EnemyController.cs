@@ -1,7 +1,6 @@
 using System;
 using System.Collections;
 using Unity.VisualScripting;
-//using UnityEditor.Animations;
 using UnityEngine;
 
 public class EnemyController : MonoBehaviour
@@ -28,12 +27,13 @@ public class EnemyController : MonoBehaviour
 
     void Update()
     {
-        if (!IsDead)
-        {
-            MoveToPlayer();
-            Shoot();
-            PlayerCheck();
-        }
+        if (IsDead) { Debug.Log($"IsDead ошибка {this.name}"); return; }
+        if (!gameObject.activeSelf) { Debug.Log("gameObject.activeSelf ошибка"); return; }
+        if (_characterController == null) { Debug.Log("_characterController == null ошибка"); return; }
+        if (!_characterController.enabled) { Debug.Log("_characterController.enabled ошибка"); return; }
+        MoveToPlayer();
+        Shoot();
+        PlayerCheck();
     }
 
     private void OnEnable()
@@ -48,6 +48,7 @@ public class EnemyController : MonoBehaviour
 
     private void MoveToPlayer()
     {
+        if (_characterController == null || !_characterController.enabled) return;
         Vector3 move = (_player.transform.position - _characterController.transform.position).normalized;
         _characterController.transform.rotation = Quaternion.LookRotation(move);
         float speed = move.magnitude * _enemy.Speed;
@@ -125,16 +126,17 @@ public class EnemyController : MonoBehaviour
 
     private void Dead(GameObject thisEnemy)
     {
+        thisEnemy.GetComponent<EnemyController>().IsDead = true;
+        thisEnemy.GetComponent<CharacterController>().enabled = false;
         StartCoroutine(Death(thisEnemy));
     }
 
     private IEnumerator Death(GameObject thisEnemy)
     {
         thisEnemy.GetComponent<Animator>().SetBool("Dead", true);
-        thisEnemy.GetComponent<EnemyController>().IsDead = true;
         OnDeathAnimationPlay?.Invoke(thisEnemy.GetComponent<BaseEnemy>());
         yield return new WaitForSeconds(10f);
-        thisEnemy.gameObject.SetActive(false);
+        Destroy(thisEnemy);
     }
 
 

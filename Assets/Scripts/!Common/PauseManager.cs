@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
+using static GameManager;
 
 public class PauseManager : MonoBehaviour
 {
@@ -26,6 +27,8 @@ public class PauseManager : MonoBehaviour
         Cursor.lockState = CursorLockMode.Confined;
         Cursor.visible = true;
         _isPaused = true;
+        GameManager.State = GameState.Paused;
+        GamePauseEvents.TriggerPaused();
     }
 
     private void HideHudElements(GameObject[] Elements)
@@ -43,6 +46,8 @@ public class PauseManager : MonoBehaviour
         Cursor.visible = false;
         Time.timeScale = 1f;
         _isPaused = false;
+        GameManager.State = GameState.Playing;
+        GamePauseEvents.TriggerResumed();
     }
 
     private void ShowHudElements(GameObject[] Elements)

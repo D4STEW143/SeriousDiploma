@@ -55,11 +55,8 @@ public abstract class BaseEnemy : MonoBehaviour
 
     private void Die()
     {
-        // НЕ Destroy! Просто отключаем и сбрасываем позже, когда снова понадобится
-        //gameObject.SetActive(false);
         this.gameObject.GetComponent<CharacterController>().enabled = false;
         OnEnemyDestroyed?.Invoke(this.gameObject);
-        // Если нужно что-то сделать сразу (частицы, звук смерти) — делай тут
     }
 
     private bool TryGetBullet(GameObject obj, out Bullet bullet)
@@ -67,18 +64,4 @@ public abstract class BaseEnemy : MonoBehaviour
         bullet = obj.GetComponent<Bullet>();
         return bullet != null;
     }
-    //private void OnCollisionEnter(Collision collision)
-    //{
-    //    if (collision.gameObject.CompareTag("Bullet"))
-    //    {
-    //        Debug.Log("Hit");
-    //        Bullet bullet = collision.gameObject.GetComponent<Bullet>();
-    //        _heath -= bullet.damage;
-    //        if (_heath <= 0)
-    //        {
-    //            Destroy(gameObject);
-    //        }
-    //    }
-    //}
-
 }

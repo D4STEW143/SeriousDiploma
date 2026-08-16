@@ -60,6 +60,8 @@ public class PlayerHUD : MonoBehaviour
 
     private void UpdateHUD()
     {
+        _timer.text = TimeDisplayment(Timer);
+        if(_scoreText!=null)_scoreText.text = _score.ToString();
         if(_playerHealthManager != null)
         {
             _playerHealth.text = _playerHealthManager.PlayerHealth.ToString();
@@ -69,8 +71,6 @@ public class PlayerHUD : MonoBehaviour
         {
             _weaponAmmo.text = $"{_playerWeaponManager.BulletsInMagLeft(_weapon.WeaponType)}/{_playerWeaponManager.CurrentAmmoAmount(_weapon.WeaponType)}";
         }
-        if(_scoreText!=null)_scoreText.text = _score.ToString();
-        _timer.text = TimeDisplayment(Timer);
     }
 
     private void TimerTick()

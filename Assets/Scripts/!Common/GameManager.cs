@@ -21,10 +21,16 @@ public class GameManager : MonoBehaviour
     public static event Action<int> OnScoreChanged;
     public static event Action ActivateExitPortal;
 
+    public enum GameState { Playing, GameOver, Paused }
+    public static GameState State { get; set; } = GameState.Playing;
+    [field: SerializeField] public AudioClip[] LevelTracks { get; private set; }
+
     private void Start()
     {
         Time.timeScale = 1.0f;
         _scoreCounter = GetComponent<ScoreCounterScreen>();
+        BackGroundMusic.Instance.SetPlaylist(LevelTracks);
+        BackGroundMusic.Instance.PlayFirst();
     }
 
     private void Update()
@@ -35,6 +41,10 @@ public class GameManager : MonoBehaviour
             {
                 Debug.Log("WIN");
             }
+        }
+        if (State == GameState.Playing)
+        {
+            BackGroundMusic.Instance.CheckForTrackEnd();
         }
     }
 
@@ -85,7 +95,6 @@ public class GameManager : MonoBehaviour
     private void EndViaPortal()
     {
         _scoreCounter.ManageScore(_gameScore, _playerHUD.Timer);
-        //SceneManager.LoadScene("GameOver");
         //TODO:Сделать здесь заггрузку экрана подсчета очков и перехода на следующий уровень
     }
 
